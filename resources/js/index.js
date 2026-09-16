@@ -43,6 +43,10 @@ export default function signaturePadFormComponent({
                 this.signaturePad.off()
             }
 
+            this._onResize = () => this.resizeCanvas()
+    this._onThemeChanged = (e) => this.onThemeChanged(e.detail)
+    this._onSystemThemeChanged = (e) => this.onThemeChanged(e.matches ? 'dark' : 'light')
+
             this.watchState()
             this.watchResize()
             this.watchTheme()
@@ -153,49 +157,50 @@ export default function signaturePadFormComponent({
             })
         },
 
-        watchResize() {
-            window.addEventListener('resize', () => this.resizeCanvas())
-            this.resizeCanvas()
-        },
+       watchResize() {
+    window.addEventListener('resize', this._onResize)
+    this.resizeCanvas()
+},
 
         /**
          * To correctly handle canvas on low and high DPI screens one has to take devicePixelRatio into account and scale the canvas accordingly.
          */
         resizeCanvas() {
-            const data = this.signaturePad.toData()
-            const ratio = Math.max(window.devicePixelRatio || 1, 1)
+             if (!this.$refs.canvas) return
 
-            this.$refs.canvas.width = this.$refs.canvas.offsetWidth * ratio
-            this.$refs.canvas.height = this.$refs.canvas.offsetHeight * ratio
-            this.$refs.canvas.getContext('2d').scale(ratio, ratio)
-            this.signaturePad.clear()
-            if (data.length) this.signaturePad.fromData(data)
-        },
+           const ratio = Math.max(window.devicePixelRatio || 1, 1)
+    this.$refs.canvas.width = this.$refs.canvas.offsetWidth * ratio
+    this.$refs.canvas.height = this.$refs.canvas.offsetHeight * ratio
+    this.$refs.canvas.getContext('2d').scale(ratio, ratio)
+    this.signaturePad.clear()
+},
 
-        watchTheme() {
-            let theme
+destroy() {
+    window.removeEventListener('resize', this._onResize)
+    window.removeEventListener('theme-changed', this._onThemeChanged)
+    window
+        .matchMedia('(prefers-color-scheme: dark)')
+        .removeEventListener('change', this._onSystemThemeChanged)
+},
 
-            if (this.$store.hasOwnProperty('theme')) {
-                window.addEventListener('theme-changed', (e) =>
-                    this.onThemeChanged(e.detail),
-                )
+       watchTheme() {
+    let theme
 
-                theme = this.$store.theme
-            } else {
-                window
-                    .matchMedia('(prefers-color-scheme: dark)')
-                    .addEventListener('change', (e) =>
-                        this.onThemeChanged(e.matches ? 'dark' : 'light'),
-                    )
+    if (this.$store.hasOwnProperty('theme')) {
+        window.addEventListener('theme-changed', this._onThemeChanged)
+        theme = this.$store.theme
+    } else {
+        window
+            .matchMedia('(prefers-color-scheme: dark)')
+            .addEventListener('change', this._onSystemThemeChanged)
 
-                theme = window.matchMedia('(prefers-color-scheme: dark)')
-                    .matches
-                    ? 'dark'
-                    : 'light'
-            }
+        theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light'
+    }
 
-            this.onThemeChanged(theme)
-        },
+    this.onThemeChanged(theme)
+},
 
         /**
          * Update the signature pad's pen color and background color when the theme changes.

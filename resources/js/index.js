@@ -44,8 +44,9 @@ export default function signaturePadFormComponent({
             }
 
             this._onResize = () => this.resizeCanvas()
-    this._resizeObserver = new ResizeObserver(() => this.resizeCanvas())
-    this._resizeObserver.observe(this.$refs.canvas)
+    this._onModalOpened = () => this.$nextTick(() => this.resizeCanvas())
+    window.addEventListener('resize', this._onResize)
+    window.addEventListener('open-modal', this._onModalOpened)
 
             this.watchState()
             this.watchResize()
@@ -166,18 +167,20 @@ export default function signaturePadFormComponent({
          * To correctly handle canvas on low and high DPI screens one has to take devicePixelRatio into account and scale the canvas accordingly.
          */
         resizeCanvas() {
-             if (!this.$refs.canvas) return
+          const data = this.signaturePad.toData()
+    const ratio = Math.max(window.devicePixelRatio || 1, 1)
 
-           const ratio = Math.max(window.devicePixelRatio || 1, 1)
     this.$refs.canvas.width = this.$refs.canvas.offsetWidth * ratio
     this.$refs.canvas.height = this.$refs.canvas.offsetHeight * ratio
     this.$refs.canvas.getContext('2d').scale(ratio, ratio)
+
     this.signaturePad.clear()
+    if (data.length) this.signaturePad.fromData(data)
 },
 
 destroy() {
-    this._resizeObserver?.disconnect()
-    window.removeEventListener('resize', this._onResize)
+   window.removeEventListener('resize', this._onResize)
+    window.removeEventListener('open-modal', this._onModalOpened)
     window.removeEventListener('theme-changed', this._onThemeChanged)
     window
         .matchMedia('(prefers-color-scheme: dark)')

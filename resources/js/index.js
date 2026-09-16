@@ -44,8 +44,8 @@ export default function signaturePadFormComponent({
             }
 
             this._onResize = () => this.resizeCanvas()
-    this._onThemeChanged = (e) => this.onThemeChanged(e.detail)
-    this._onSystemThemeChanged = (e) => this.onThemeChanged(e.matches ? 'dark' : 'light')
+    this._resizeObserver = new ResizeObserver(() => this.resizeCanvas())
+    this._resizeObserver.observe(this.$refs.canvas)
 
             this.watchState()
             this.watchResize()
@@ -176,6 +176,7 @@ export default function signaturePadFormComponent({
 },
 
 destroy() {
+    this._resizeObserver?.disconnect()
     window.removeEventListener('resize', this._onResize)
     window.removeEventListener('theme-changed', this._onThemeChanged)
     window

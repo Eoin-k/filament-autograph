@@ -44,13 +44,18 @@ export default function signaturePadFormComponent({
             }
 
             this._onResize = () => this.resizeCanvas()
-    this._onModalOpened = () => this.$nextTick(() => this.resizeCanvas())
     window.addEventListener('resize', this._onResize)
-    window.addEventListener('open-modal', this._onModalOpened)
+
+     this.$refs.canvas.addEventListener(
+        'pointerdown',
+        () => this.resizeCanvas(),
+        { capture: true, once: true }
+    )
+
 
             this.watchState()
-            this.watchResize()
             this.watchTheme()
+            this.resizeCanvas()
 
             if (state.initialValue) {
                 this.signaturePad.fromDataURL(state.initialValue)

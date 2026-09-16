@@ -154,7 +154,7 @@ export default function signaturePadFormComponent({
         },
 
         watchResize() {
-            window.addEventListener('resize', () => this.resizeCanvas)
+            window.addEventListener('resize', () => this.resizeCanvas())
             this.resizeCanvas()
         },
 
@@ -162,12 +162,14 @@ export default function signaturePadFormComponent({
          * To correctly handle canvas on low and high DPI screens one has to take devicePixelRatio into account and scale the canvas accordingly.
          */
         resizeCanvas() {
+            const data = this.signaturePad.toData()
             const ratio = Math.max(window.devicePixelRatio || 1, 1)
 
             this.$refs.canvas.width = this.$refs.canvas.offsetWidth * ratio
             this.$refs.canvas.height = this.$refs.canvas.offsetHeight * ratio
             this.$refs.canvas.getContext('2d').scale(ratio, ratio)
             this.signaturePad.clear()
+            if (data.length) this.signaturePad.fromData(data)
         },
 
         watchTheme() {
@@ -201,10 +203,10 @@ export default function signaturePadFormComponent({
          */
         onThemeChanged(theme) {
             this.signaturePad.penColor =
-                theme === 'dark' ? penColorOnDark ?? penColor : penColor
+                theme === 'dark' ? (penColorOnDark ?? penColor) : penColor
             this.signaturePad.backgroundColor =
                 theme === 'dark'
-                    ? backgroundColorOnDark ?? backgroundColor
+                    ? (backgroundColorOnDark ?? backgroundColor)
                     : backgroundColor
 
             if (!this.signaturePad.toData().length) {
@@ -215,10 +217,10 @@ export default function signaturePadFormComponent({
             const data = this.signaturePad.toData()
             data.map((d) => {
                 d.penColor =
-                    theme === 'dark' ? penColorOnDark ?? penColor : penColor
+                    theme === 'dark' ? (penColorOnDark ?? penColor) : penColor
                 d.backgroundColor =
                     theme === 'dark'
-                        ? backgroundColorOnDark ?? backgroundColor
+                        ? (backgroundColorOnDark ?? backgroundColor)
                         : backgroundColor
                 return d
             })
